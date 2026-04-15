@@ -1,23 +1,45 @@
 import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, MessageCircle, MapPin, Instagram, Facebook, ShieldCheck, Truck, Banknote, X, Send, Menu, Heart, ShoppingCart, Trash2 } from 'lucide-react';
+import { MessageCircle, MapPin, Instagram, Facebook, ShieldCheck, Truck, Banknote, X, Send, Menu, Heart, ShoppingCart, Trash2, Flame } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
+
+// --- Icons ---
+function WhatsAppIcon({ size = 24, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+    </svg>
+  );
+}
+
+function Logo({ className = "", isScrolled = false }: { className?: string, isScrolled?: boolean }) {
+  return (
+    <div className={`flex items-center gap-2 ${className}`}>
+      <div className="bg-brand text-white p-1.5 rounded-sm transform -skew-x-12">
+        <span className="font-display text-xl leading-none block transform skew-x-12">DS</span>
+      </div>
+      <span className={`font-display text-2xl tracking-wider ${isScrolled ? 'text-dark' : 'text-white'}`}>
+        DREAMS<span className="text-brand">SPORT</span>
+      </span>
+    </div>
+  );
+}
 
 // --- Data ---
 const SNEAKERS = [
-  { id: 's1', name: 'Nike Dunk Low Retro', price: '$450.000', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=800' },
-  { id: 's2', name: 'Air Jordan 1 High', price: '$650.000', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=800' },
-  { id: 's3', name: 'Air Force 1 \'07', price: '$400.000', image: 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&q=80&w=800' },
-  { id: 's4', name: 'New Balance 550', price: '$520.000', image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&q=80&w=800' },
-  { id: 's5', name: 'Air Jordan 4 Retro', price: '$750.000', image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=800' },
-  { id: 's6', name: 'Adidas Yeezy Boost', price: '$850.000', image: 'https://images.unsplash.com/photo-1605348532760-6753d2c43329?auto=format&fit=crop&q=80&w=800' },
+  { id: 's1', name: 'Nike Dunk Low Retro', brand: 'Nike', price: '$450.000', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=800', sizes: ['7', '8', '9', '10', '11'], badge: 'HOT' },
+  { id: 's2', name: 'Air Jordan 1 High', brand: 'Jordan', price: '$650.000', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=800', sizes: ['8', '9', '10'], badge: 'NEW' },
+  { id: 's3', name: 'Air Force 1 \'07', brand: 'Nike', price: '$400.000', image: 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&q=80&w=800', sizes: ['7', '8', '8.5', '9', '10'] },
+  { id: 's4', name: 'New Balance 550', brand: 'New Balance', price: '$520.000', image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&q=80&w=800', sizes: ['8', '9', '10', '11'] },
+  { id: 's5', name: 'Air Jordan 4 Retro', brand: 'Jordan', price: '$750.000', image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=800', sizes: ['9', '10'], badge: 'HOT' },
+  { id: 's6', name: 'Adidas Yeezy Boost', brand: 'Adidas', price: '$850.000', image: 'https://images.unsplash.com/photo-1605348532760-6753d2c43329?auto=format&fit=crop&q=80&w=800', sizes: ['8', '9', '9.5', '10'] },
 ];
 
 const CLOTHING = [
-  { id: 'c1', name: 'Conjunto Deportivo Urbano', price: '$180.000', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800' },
-  { id: 'c2', name: 'Hoodie Oversize Essential', price: '$120.000', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800' },
-  { id: 'c3', name: 'Camiseta Graphic Street', price: '$70.000', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=800' },
-  { id: 'c4', name: 'Jogger Cargo Tech', price: '$140.000', image: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=800' },
+  { id: 'c1', name: 'Conjunto Deportivo Urbano', price: '$180.000', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800', sizes: ['S', 'M', 'L', 'XL'] },
+  { id: 'c2', name: 'Hoodie Oversize Essential', price: '$120.000', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800', sizes: ['M', 'L', 'XL'], badge: 'NEW' },
+  { id: 'c3', name: 'Camiseta Graphic Street', price: '$70.000', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=800', sizes: ['S', 'M', 'L'] },
+  { id: 'c4', name: 'Jogger Cargo Tech', price: '$140.000', image: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=800', sizes: ['M', 'L', 'XL'] },
 ];
 
 const WHATSAPP_NUMBER = '573016438472';
@@ -43,7 +65,9 @@ function Navbar() {
   return (
     <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'}`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <a href="#" className={`font-display text-3xl tracking-wider ${isScrolled ? 'text-dark' : 'text-white'}`}>DREAMS<span className="text-brand">SPORT</span></a>
+        <a href="#">
+          <Logo isScrolled={isScrolled} />
+        </a>
         
         <div className={`hidden md:flex gap-8 text-sm font-semibold tracking-widest uppercase ${isScrolled ? 'text-dark' : 'text-white'}`}>
           <a href="#sneakers" className="hover:text-brand transition-colors">Sneakers</a>
@@ -94,7 +118,7 @@ function Sidebars() {
 
   const checkoutWhatsApp = () => {
     if (cart.length === 0) return;
-    const itemsText = cart.map((item: any) => `- ${item.name} (${item.price})`).join('%0A');
+    const itemsText = cart.map((item: any) => `- ${item.name} (Talla: ${item.selectedSize}) - ${item.price}`).join('%0A');
     const total = cart.reduce((acc: number, item: any) => acc + parseInt(item.price.replace(/[^0-9]/g, '')), 0);
     const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(total);
     const msg = `¡Qué más! Vengo de la página web y quiero llevarme este heat:%0A%0A${itemsText}%0A%0ATotal aprox: ${formattedTotal}%0A%0A¿Tienen disponibilidad?`;
@@ -121,22 +145,23 @@ function Sidebars() {
                     <p className="text-sm mt-2">¡Agrega algo de heat!</p>
                   </div>
                 ) : (
-                  cart.map((item: any, idx: number) => (
-                    <div key={idx} className="flex gap-4 items-center border-b border-gray-100 pb-4">
+                  cart.map((item: any) => (
+                    <div key={item.cartId} className="flex gap-4 items-center border-b border-gray-100 pb-4">
                       <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md bg-gray-100" />
                       <div className="flex-1">
-                        <h4 className="font-bold text-dark">{item.name}</h4>
+                        <h4 className="font-bold text-dark leading-tight">{item.name}</h4>
+                        <p className="text-sm text-gray-500 mb-1">Talla: {item.selectedSize}</p>
                         <p className="text-brand font-bold">{item.price}</p>
                       </div>
-                      <button onClick={() => removeFromCart(idx)} className="p-2 text-gray-400 hover:text-brand transition-colors"><Trash2 size={20} /></button>
+                      <button onClick={() => removeFromCart(item.cartId)} className="p-2 text-gray-400 hover:text-brand transition-colors"><Trash2 size={20} /></button>
                     </div>
                   ))
                 )}
               </div>
               {cart.length > 0 && (
                 <div className="p-6 border-t border-gray-100 bg-gray-50">
-                  <button onClick={checkoutWhatsApp} className="w-full py-4 bg-brand text-white font-display text-xl uppercase tracking-wider hover:bg-black transition-colors flex items-center justify-center gap-2">
-                    <MessageCircle size={24} /> Pedir por WhatsApp
+                  <button onClick={checkoutWhatsApp} className="w-full py-4 bg-[#25D366] text-white font-display text-xl uppercase tracking-wider hover:bg-[#1da851] transition-colors flex items-center justify-center gap-2">
+                    <WhatsAppIcon size={24} /> Pedir por WhatsApp
                   </button>
                 </div>
               )}
@@ -170,7 +195,6 @@ function Sidebars() {
                         <p className="text-brand font-bold">{item.price}</p>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => { addToCart(item); removeFromWishlist(item.id); setIsWishlistOpen(false); setIsCartOpen(true); }} className="p-2 bg-brand text-white rounded-md hover:bg-black transition-colors"><ShoppingCart size={18} /></button>
                         <button onClick={() => removeFromWishlist(item.id)} className="p-2 text-gray-400 hover:text-brand transition-colors"><Trash2 size={18} /></button>
                       </div>
                     </div>
@@ -217,8 +241,8 @@ function Hero() {
             <a href="#sneakers" className="w-full sm:w-auto px-8 py-4 bg-brand text-white font-display text-xl uppercase tracking-wider hover:bg-white hover:text-brand transition-colors">
               Fuego en stock
             </a>
-            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/30 text-white font-display text-xl uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
-              <MessageCircle size={20} />
+            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="w-full sm:w-auto px-8 py-4 bg-[#25D366] text-white font-display text-xl uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#1da851] transition-colors">
+              <WhatsAppIcon size={20} />
               Hablar con un asesor
             </a>
           </div>
@@ -249,13 +273,25 @@ function TrustBanner() {
 function ProductCard({ product, isClothing = false }: { product: any, isClothing?: boolean }) {
   const { addToCart, addToWishlist, wishlist } = useContext(AppContext);
   const isWishlisted = wishlist.some((item: any) => item.id === product.id);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [showError, setShowError] = useState(false);
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      setShowError(true);
+      setTimeout(() => setShowError(false), 2000);
+      return;
+    }
+    addToCart({ ...product, selectedSize, cartId: `${product.id}-${selectedSize}-${Date.now()}` });
+    setSelectedSize(null);
+  };
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="group relative bg-white border border-gray-100 p-4 hover:shadow-xl transition-all duration-300"
+      className="group relative bg-white border border-gray-100 p-4 hover:shadow-xl transition-all duration-300 flex flex-col"
     >
       <div className={`relative overflow-hidden mb-4 bg-gray-100 ${isClothing ? 'aspect-[3/4]' : 'aspect-square'}`}>
         <img 
@@ -264,24 +300,90 @@ function ProductCard({ product, isClothing = false }: { product: any, isClothing
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"
         />
+        
+        {/* Badges */}
+        {product.badge && (
+          <div className="absolute top-3 left-3 z-10">
+            <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1 ${product.badge === 'HOT' ? 'bg-orange-500' : 'bg-dark'}`}>
+              {product.badge === 'HOT' && <Flame size={12} />}
+              {product.badge}
+            </span>
+          </div>
+        )}
+
         <div className="absolute top-3 right-3 z-10">
           <button onClick={() => addToWishlist(product)} className={`p-2 rounded-full bg-white shadow-md hover:scale-110 transition-transform ${isWishlisted ? 'text-brand' : 'text-gray-400'}`}>
             <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
           </button>
         </div>
         <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-          <button onClick={() => addToCart(product)} className="px-6 py-3 bg-brand text-white font-display uppercase tracking-wider hover:bg-black transition-colors translate-y-4 group-hover:translate-y-0 duration-300">
+          <button onClick={handleAddToCart} className="px-6 py-3 bg-brand text-white font-display uppercase tracking-wider hover:bg-black transition-colors translate-y-4 group-hover:translate-y-0 duration-300">
             Agregar al Carrito
           </button>
         </div>
       </div>
-      <div className="flex justify-between items-start">
+      <div className="flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="font-display text-xl tracking-wide mb-1 text-dark">{product.name}</h3>
-          <p className="text-brand font-bold">{product.price}</p>
+          {product.brand && <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">{product.brand}</p>}
+          <h3 className="font-display text-xl tracking-wide mb-1 text-dark leading-tight">{product.name}</h3>
+          <p className="text-brand font-bold text-lg">{product.price}</p>
+        </div>
+        
+        {/* Size Selector */}
+        <div className="mt-4">
+          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Selecciona talla:</p>
+          <div className="flex flex-wrap gap-2">
+            {product.sizes?.map((size: string) => (
+              <button
+                key={size}
+                onClick={() => { setSelectedSize(size); setShowError(false); }}
+                className={`text-xs font-bold px-3 py-1.5 border transition-colors ${selectedSize === size ? 'bg-dark text-white border-dark' : 'border-gray-200 text-gray-600 hover:border-dark'}`}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+          {showError && <p className="text-brand text-xs mt-2 font-semibold animate-pulse">¡Debes seleccionar una talla!</p>}
         </div>
       </div>
     </motion.div>
+  );
+}
+
+function SneakersSection() {
+  const [filter, setFilter] = useState('Todos');
+  const BRANDS = ['Todos', 'Nike', 'Jordan', 'Adidas', 'New Balance'];
+  
+  const filteredSneakers = filter === 'Todos' ? SNEAKERS : SNEAKERS.filter(s => s.brand === filter);
+
+  return (
+    <section id="sneakers" className="py-24 px-6 max-w-7xl mx-auto">
+      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h2 className="text-5xl md:text-7xl font-display tracking-tighter mb-4 text-dark">HEAT EN TUS PIES</h2>
+          <p className="text-gray-500 uppercase tracking-widest text-sm font-semibold">Los drops que todos quieren</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-10">
+        {BRANDS.map(brand => (
+          <button
+            key={brand}
+            onClick={() => setFilter(brand)}
+            className={`px-6 py-2 font-display uppercase tracking-wider text-sm transition-colors ${filter === brand ? 'bg-brand text-white' : 'bg-gray-100 text-dark hover:bg-gray-200'}`}
+          >
+            {brand}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredSneakers.map((item) => (
+          <ProductCard key={item.id} product={item} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -301,6 +403,28 @@ function Section({ id, title, subtitle, items, isClothing = false }: { id: strin
         {items.map((item) => (
           <ProductCard key={item.id} product={item} isClothing={isClothing} />
         ))}
+      </div>
+    </section>
+  );
+}
+
+function Newsletter() {
+  return (
+    <section className="bg-gray-100 py-24 px-6">
+      <div className="max-w-3xl mx-auto text-center">
+        <h2 className="font-display text-4xl md:text-5xl mb-4 text-dark">ÚNETE AL CLUB</h2>
+        <p className="text-gray-500 mb-8 text-lg">Recibe acceso anticipado a drops exclusivos, descuentos y noticias de la cultura sneaker antes que nadie.</p>
+        <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
+          <input 
+            type="email" 
+            placeholder="Tu correo electrónico" 
+            className="flex-1 px-6 py-4 border border-gray-300 focus:outline-none focus:border-brand bg-white text-dark" 
+            required
+          />
+          <button type="submit" className="bg-brand text-white font-display uppercase tracking-wider px-8 py-4 hover:bg-dark transition-colors">
+            Suscribirme
+          </button>
+        </form>
       </div>
     </section>
   );
@@ -448,6 +572,7 @@ function Footer() {
     <footer id="ubicacion" className="bg-dark text-white pt-24 pb-12">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 mb-16">
         <div>
+          <Logo className="mb-8" />
           <h2 className="font-display text-5xl mb-6">CAE A LA<br/><span className="text-brand">TIENDA</span></h2>
           <p className="text-gray-400 mb-8 max-w-md text-lg">
             Pruébate el heat en persona. Te armamos el outfit completo en Soacha.
@@ -500,10 +625,8 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (index: number) => {
-    const newCart = [...cart];
-    newCart.splice(index, 1);
-    setCart(newCart);
+  const removeFromCart = (cartId: string) => {
+    setCart(cart.filter(item => item.cartId !== cartId));
   };
 
   const addToWishlist = (product: any) => {
@@ -525,12 +648,9 @@ export default function App() {
         <Sidebars />
         <Hero />
         <TrustBanner />
-        <Section 
-          id="sneakers" 
-          title="HEAT EN TUS PIES" 
-          subtitle="Los drops que todos quieren" 
-          items={SNEAKERS} 
-        />
+        
+        <SneakersSection />
+        
         <Section 
           id="ropa" 
           title="DRIP URBANO" 
@@ -538,6 +658,9 @@ export default function App() {
           items={CLOTHING} 
           isClothing={true}
         />
+        
+        <Newsletter />
+        
         <Footer />
         
         {/* Fixed WhatsApp Button */}
@@ -547,7 +670,7 @@ export default function App() {
           rel="noreferrer"
           className="fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center"
         >
-          <MessageCircle size={32} />
+          <WhatsAppIcon size={32} />
         </a>
 
         <ChatBot />
@@ -555,4 +678,3 @@ export default function App() {
     </AppContext.Provider>
   );
 }
-
