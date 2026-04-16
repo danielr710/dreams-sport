@@ -1,9 +1,43 @@
-import { useState, useEffect, useRef, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageCircle, MapPin, Instagram, Facebook, ShieldCheck, Truck, Banknote, X, Send, Menu, Heart, ShoppingCart, Trash2, Flame } from 'lucide-react';
-import { GoogleGenAI } from '@google/genai';
+import { MapPin, Instagram, ShieldCheck, Truck, Zap, ShoppingBag, MessageSquare, Star, ArrowRight, Flame, Facebook, ShoppingCart, X, Trash2 } from 'lucide-react';
 
-// --- Icons ---
+const WHATSAPP_NUMBER = '573016438472';
+const WHATSAPP_BASE_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=`;
+
+const generateWaLink = (msg: string) => `${WHATSAPP_BASE_URL}${encodeURIComponent(msg)}`;
+
+const SIZES = Array.from({ length: 11 }, (_, i) => (32 + i).toString());
+
+const FEATURED_SNEAKER = {
+  id: 'featured',
+  name: 'Off-White x Air Jordan 1 "Chicago"',
+  price: '$280.000',
+  image: 'https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&fit=crop&q=80&w=1200',
+  description: 'Un clásico reimaginado. Perfecto para romperla en la calle.',
+  sizes: SIZES,
+};
+
+const SNEAKERS = [
+  { id: 's1', name: 'Nike Dunk Low "Panda"', price: '$180.000', image: 'https://images.unsplash.com/photo-1658409214757-b0b2e3e67041?auto=format&fit=crop&q=80&w=800', sizes: SIZES },
+  { id: 's2', name: 'New Balance 550 White/Green', price: '$195.000', image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&q=80&w=800', sizes: SIZES },
+  { id: 's3', name: 'Air Jordan 4 "Black Canvas"', price: '$200.000', image: 'https://images.unsplash.com/photo-1636718282214-0b4162a154f0?auto=format&fit=crop&q=80&w=800', sizes: SIZES },
+  { id: 's4', name: 'Adidas Samba OG Black', price: '$170.000', image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=800', sizes: SIZES },
+  { id: 's5', name: 'Nike Air Max 1', price: '$190.000', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=800', sizes: SIZES },
+  { id: 's6', name: 'Nike Air Force 1 Triple White', price: '$150.000', image: 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&q=80&w=800', sizes: SIZES },
+];
+
+const REVIEWS = [
+  { name: 'Mateo R.', text: 'El envío a Soacha fue súper rápido. 10/10.', rating: 5 },
+  { name: 'Juan D.', text: 'Las Jordan están increíbles, la cálidad es brutal.', rating: 5 },
+  { name: 'Sebas G.', text: 'Excelente atención por WhatsApp, me guiaron con las tallas.', rating: 5 },
+  { name: 'Camilo P.', text: 'Fuego puro, recomendados al cien.', rating: 5 },
+  { name: 'Andrés M.', text: 'Llegaron impecables. Listo para el finde.', rating: 5 },
+];
+
+// Context
+const AppContext = createContext<any>(null);
+
 function WhatsAppIcon({ size = 24, className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -12,588 +46,592 @@ function WhatsAppIcon({ size = 24, className = "" }) {
   );
 }
 
-function Logo({ className = "", isScrolled = false }: { className?: string, isScrolled?: boolean }) {
+function Logo() {
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      <div className="bg-brand text-white p-1.5 rounded-sm transform -skew-x-12">
-        <span className="font-display text-xl leading-none block transform skew-x-12">DS</span>
+    <div className="flex items-center gap-2">
+      <div className="bg-[#E60000] text-white w-8 h-8 flex items-center justify-center font-display font-bold text-xl skew-x-[-10deg]">
+        <span className="skew-x-[10deg] block">DS</span>
       </div>
-      <span className={`font-display text-2xl tracking-wider ${isScrolled ? 'text-dark' : 'text-white'}`}>
-        DREAMS<span className="text-brand">SPORT</span>
+      <span className="font-display font-bold text-xl tracking-tight text-white uppercase">
+        Dreams<span className="text-[#E60000]">Sport</span>
       </span>
     </div>
   );
 }
 
-// --- Data ---
-const SNEAKERS = [
-  { id: 's1', name: 'Nike Dunk Low Retro', brand: 'Nike', price: '$450.000', image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&q=80&w=800', sizes: ['7', '8', '9', '10', '11'], badge: 'HOT' },
-  { id: 's2', name: 'Air Jordan 1 High', brand: 'Jordan', price: '$650.000', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=800', sizes: ['8', '9', '10'], badge: 'NEW' },
-  { id: 's3', name: 'Air Force 1 \'07', brand: 'Nike', price: '$400.000', image: 'https://images.unsplash.com/photo-1595341888016-a392ef81b7de?auto=format&fit=crop&q=80&w=800', sizes: ['7', '8', '8.5', '9', '10'] },
-  { id: 's4', name: 'New Balance 550', brand: 'New Balance', price: '$520.000', image: 'https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&q=80&w=800', sizes: ['8', '9', '10', '11'] },
-  { id: 's5', name: 'Air Jordan 4 Retro', brand: 'Jordan', price: '$750.000', image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=800', sizes: ['9', '10'], badge: 'HOT' },
-  { id: 's6', name: 'Adidas Yeezy Boost', brand: 'Adidas', price: '$850.000', image: 'https://images.unsplash.com/photo-1605348532760-6753d2c43329?auto=format&fit=crop&q=80&w=800', sizes: ['8', '9', '9.5', '10'] },
-];
-
-const CLOTHING = [
-  { id: 'c1', name: 'Conjunto Deportivo Urbano', price: '$180.000', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800', sizes: ['S', 'M', 'L', 'XL'] },
-  { id: 'c2', name: 'Hoodie Oversize Essential', price: '$120.000', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=800', sizes: ['M', 'L', 'XL'], badge: 'NEW' },
-  { id: 'c3', name: 'Camiseta Graphic Street', price: '$70.000', image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=800', sizes: ['S', 'M', 'L'] },
-  { id: 'c4', name: 'Jogger Cargo Tech', price: '$140.000', image: 'https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?auto=format&fit=crop&q=80&w=800', sizes: ['M', 'L', 'XL'] },
-];
-
-const WHATSAPP_NUMBER = '573016438472';
-const WHATSAPP_MSG = '¡Qué más! Vengo de la página web y quiero info de los pares.';
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MSG)}`;
-
-// --- Context ---
-const AppContext = createContext<any>(null);
-
-// --- Components ---
-
 function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { cart, wishlist, setIsCartOpen, setIsWishlistOpen } = useContext(AppContext);
+  const [scrolled, setScrolled] = useState(false);
+  const { cart, setIsCartOpen } = useContext(AppContext);
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <nav className={`fixed w-full z-40 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'}`}>
+    <nav className={`fixed top-0 w-full z-40 transition-all duration-300 border-b border-white/5 ${scrolled ? 'bg-[#050505]/90 backdrop-blur-md py-4' : 'bg-transparent py-6'}`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <a href="#">
-          <Logo isScrolled={isScrolled} />
-        </a>
-        
-        <div className={`hidden md:flex gap-8 text-sm font-semibold tracking-widest uppercase ${isScrolled ? 'text-dark' : 'text-white'}`}>
-          <a href="#sneakers" className="hover:text-brand transition-colors">Sneakers</a>
-          <a href="#ropa" className="hover:text-brand transition-colors">Ropa</a>
-          <a href="#ubicacion" className="hover:text-brand transition-colors">Ubicación</a>
-        </div>
-
-        <div className={`flex items-center gap-4 ${isScrolled ? 'text-dark' : 'text-white'}`}>
-          <button onClick={() => setIsWishlistOpen(true)} className="relative p-2 hover:text-brand transition-colors">
-            <Heart size={24} />
-            {wishlist.length > 0 && <span className="absolute top-0 right-0 bg-brand text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{wishlist.length}</span>}
-          </button>
-          <button onClick={() => setIsCartOpen(true)} className="relative p-2 hover:text-brand transition-colors">
-            <ShoppingCart size={24} />
-            {cart.length > 0 && <span className="absolute top-0 right-0 bg-brand text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{cart.length}</span>}
-          </button>
-          <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        <a href="#"><Logo /></a>
+        <div className="flex items-center gap-4 sm:gap-6">
+          <a href="https://www.instagram.com/tiendasdreamssport_/" target="_blank" rel="noreferrer" className="text-white hover:text-[#E60000] transition-colors hidden sm:block">
+            <Instagram size={24} />
+          </a>
+          <a href="https://www.facebook.com/Dreamstiendaderopa/" target="_blank" rel="noreferrer" className="text-white hover:text-[#E60000] transition-colors hidden sm:block">
+            <Facebook size={24} />
+          </a>
+          <button 
+            onClick={() => setIsCartOpen(true)}
+            className="relative text-white hover:text-[#E60000] transition-colors flex items-center justify-center p-2"
+          >
+            <ShoppingCart size={28} />
+            {cart.length > 0 && (
+              <span className="absolute top-0 right-0 bg-[#E60000] text-white text-[11px] font-bold w-5 h-5 flex items-center justify-center animate-pulse-soft">
+                {cart.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-white border-b border-gray-100 flex flex-col p-6 gap-6 md:hidden shadow-xl"
-          >
-            <a href="#sneakers" onClick={() => setMobileMenuOpen(false)} className="font-display text-2xl uppercase text-dark">Sneakers</a>
-            <a href="#ropa" onClick={() => setMobileMenuOpen(false)} className="font-display text-2xl uppercase text-dark">Ropa</a>
-            <a href="#ubicacion" onClick={() => setMobileMenuOpen(false)} className="font-display text-2xl uppercase text-dark">Ubicación</a>
-            <div className="flex gap-4 pt-4 border-t border-gray-100">
-              <a href="https://www.instagram.com/tiendasdreamssport_/" target="_blank" rel="noreferrer" className="p-2 bg-gray-100 rounded-full text-dark"><Instagram size={20} /></a>
-              <a href="https://www.facebook.com/Dreamstiendaderopa/" target="_blank" rel="noreferrer" className="p-2 bg-gray-100 rounded-full text-dark"><Facebook size={20} /></a>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </nav>
   );
 }
 
-function Sidebars() {
-  const { cart, wishlist, isCartOpen, setIsCartOpen, isWishlistOpen, setIsWishlistOpen, removeFromCart, removeFromWishlist, addToCart } = useContext(AppContext);
+function CartSidebar() {
+  const { cart, isCartOpen, setIsCartOpen, removeFromCart } = useContext(AppContext);
 
   const checkoutWhatsApp = () => {
     if (cart.length === 0) return;
     const itemsText = cart.map((item: any) => `- ${item.name} (Talla: ${item.selectedSize}) - ${item.price}`).join('%0A');
     const total = cart.reduce((acc: number, item: any) => acc + parseInt(item.price.replace(/[^0-9]/g, '')), 0);
     const formattedTotal = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(total);
-    const msg = `¡Qué más! Vengo de la página web y quiero llevarme este heat:%0A%0A${itemsText}%0A%0ATotal aprox: ${formattedTotal}%0A%0A¿Tienen disponibilidad?`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
+    const msg = `¡Hola! Vengo de la página web y quiero llevarme estos sneakers:%0A%0A${itemsText}%0A%0A*Total:* ${formattedTotal}%0A%0A¿Para dónde transfiero?`;
+    window.open(generateWaLink(msg), '_blank');
   };
 
   return (
-    <>
-      {/* Cart Sidebar */}
-      <AnimatePresence>
-        {isCartOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCartOpen(false)} className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'tween', duration: 0.3 }} className="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-brand text-white">
-                <h2 className="font-display text-2xl tracking-wider flex items-center gap-2"><ShoppingCart /> TU CARRITO</h2>
-                <button onClick={() => setIsCartOpen(false)} className="hover:rotate-90 transition-transform"><X size={24} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-                {cart.length === 0 ? (
-                  <div className="text-center text-gray-500 mt-10">
-                    <ShoppingCart size={48} className="mx-auto mb-4 opacity-20" />
-                    <p>Tu carrito está vacío.</p>
-                    <p className="text-sm mt-2">¡Agrega algo de heat!</p>
+    <AnimatePresence>
+      {isCartOpen && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCartOpen(false)} className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" />
+          <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'tween', duration: 0.3 }} className="fixed top-0 right-0 h-full w-full max-w-md bg-[#0a0a0a] z-50 shadow-2xl flex flex-col border-l border-[#222]">
+            <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#111] text-white">
+              <h2 className="font-display font-bold text-2xl uppercase tracking-wider flex items-center gap-3">
+                <ShoppingCart className="text-[#E60000]" /> Tu Carrito
+              </h2>
+              <button onClick={() => setIsCartOpen(false)} className="hover:text-[#E60000] text-gray-400 transition-colors"><X size={28} /></button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-white bg-[#050505]">
+              {cart.length === 0 ? (
+                <div className="text-center text-gray-500 mt-10 flex flex-col items-center">
+                  <div className="w-24 h-24 mb-6 rounded-full bg-[#111] flex items-center justify-center border border-[#222]">
+                    <ShoppingBag size={40} className="opacity-50" />
                   </div>
-                ) : (
-                  cart.map((item: any) => (
-                    <div key={item.cartId} className="flex gap-4 items-center border-b border-gray-100 pb-4">
-                      <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md bg-gray-100" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-dark leading-tight">{item.name}</h4>
-                        <p className="text-sm text-gray-500 mb-1">Talla: {item.selectedSize}</p>
-                        <p className="text-brand font-bold">{item.price}</p>
-                      </div>
-                      <button onClick={() => removeFromCart(item.cartId)} className="p-2 text-gray-400 hover:text-brand transition-colors"><Trash2 size={20} /></button>
-                    </div>
-                  ))
-                )}
-              </div>
-              {cart.length > 0 && (
-                <div className="p-6 border-t border-gray-100 bg-gray-50">
-                  <button onClick={checkoutWhatsApp} className="w-full py-4 bg-[#25D366] text-white font-display text-xl uppercase tracking-wider hover:bg-[#1da851] transition-colors flex items-center justify-center gap-2">
-                    <WhatsAppIcon size={24} /> Pedir por WhatsApp
-                  </button>
+                  <p className="text-xl font-display font-bold uppercase tracking-wide text-white">Vacío</p>
+                  <p className="text-sm mt-2">Agrega algo de heat para continuar.</p>
                 </div>
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Wishlist Sidebar */}
-      <AnimatePresence>
-        {isWishlistOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsWishlistOpen(false)} className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm" />
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'tween', duration: 0.3 }} className="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-dark text-white">
-                <h2 className="font-display text-2xl tracking-wider flex items-center gap-2"><Heart /> TUS FAVORITOS</h2>
-                <button onClick={() => setIsWishlistOpen(false)} className="hover:rotate-90 transition-transform"><X size={24} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-                {wishlist.length === 0 ? (
-                  <div className="text-center text-gray-500 mt-10">
-                    <Heart size={48} className="mx-auto mb-4 opacity-20" />
-                    <p>No tienes favoritos aún.</p>
-                  </div>
-                ) : (
-                  wishlist.map((item: any) => (
-                    <div key={item.id} className="flex gap-4 items-center border-b border-gray-100 pb-4">
-                      <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-md bg-gray-100" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-dark">{item.name}</h4>
-                        <p className="text-brand font-bold">{item.price}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => removeFromWishlist(item.id)} className="p-2 text-gray-400 hover:text-brand transition-colors"><Trash2 size={18} /></button>
-                      </div>
+              ) : (
+                cart.map((item: any) => (
+                  <div key={item.cartId} className="flex gap-4 items-center bg-[#111] p-3 border border-[#222]">
+                    <div className="w-24 h-24 bg-[#0a0a0a] flex-shrink-0 relative">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     </div>
-                  ))
-                )}
+                    <div className="flex-1 overflow-hidden">
+                      <h4 className="font-bold text-white uppercase text-sm leading-tight truncate mb-1">{item.name}</h4>
+                      <div className="inline-block px-2 py-0.5 bg-[#E60000]/10 border border-[#E60000]/30 text-[#E60000] text-xs font-bold mb-2">
+                        Talla: {item.selectedSize}
+                      </div>
+                      <p className="text-white font-bold font-display tracking-widest">{item.price}</p>
+                    </div>
+                    <button onClick={() => removeFromCart(item.cartId)} className="p-3 text-gray-500 hover:text-[#E60000] hover:bg-[#E60000]/10 transition-colors">
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <div className="p-6 border-t border-[#222] bg-[#111]">
+                <button onClick={checkoutWhatsApp} className="w-full py-5 bg-[#E60000] text-white font-display font-bold text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(230,0,0,0.3)] btn-ripple skew-x-[-5deg]">
+                  <span className="skew-x-[5deg] flex items-center gap-2">
+                    <WhatsAppIcon size={24} /> Comprar por WhatsApp
+                  </span>
+                </button>
               </div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function ProductModal() {
+  const { selectedProduct, setSelectedProduct, addToCart } = useContext(AppContext);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    setSelectedSize(null);
+    setError(false);
+  }, [selectedProduct]);
+
+  if (!selectedProduct) return null;
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+      return;
+    }
+    const cartItem = {
+      ...selectedProduct,
+      selectedSize,
+      cartId: `${selectedProduct.id}-${selectedSize}-${Date.now()}`
+    };
+    addToCart(cartItem);
+    setSelectedProduct(null);
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        exit={{ opacity: 0 }} 
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+        onClick={() => setSelectedProduct(null)}
+      >
+        <motion.div 
+          initial={{ y: 50, opacity: 0, scale: 0.95 }} 
+          animate={{ y: 0, opacity: 1, scale: 1 }} 
+          exit={{ y: 50, opacity: 0, scale: 0.95 }} 
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="bg-[#0a0a0a] w-full max-w-4xl flex flex-col md:flex-row shadow-[0_0_50px_rgba(0,0,0,0.8)] border border-[#222] my-8 relative overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white hover:bg-[#E60000] border border-white/10 backdrop-blur-sm transition-colors rounded-full">
+            <X size={24} />
+          </button>
+          
+          <div className="w-full md:w-1/2 bg-[#050505] p-6 sm:p-10 flex items-center justify-center border-r border-[#222]">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+              className="relative w-full aspect-square"
+            >
+              <img src={selectedProduct.image} alt={selectedProduct.name} className="w-full h-full object-cover shadow-2xl" />
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+          </div>
+
+          <div className="w-full md:w-1/2 p-6 sm:p-10 flex flex-col justify-center bg-[#111]">
+            <h2 className="font-display text-3xl sm:text-4xl uppercase font-bold mb-4 leading-[1.1] text-white">
+              {selectedProduct.name}
+            </h2>
+            <p className="text-[#E60000] font-bold text-3xl font-display tracking-wider mb-8">
+              {selectedProduct.price}
+            </p>
+
+            <div className="mb-8">
+              <div className="flex justify-between items-end mb-4">
+                <p className="uppercase tracking-widest font-bold text-sm text-gray-400">Selecciona Talla (EUR)</p>
+                {error && <p className="text-[#E60000] text-xs font-bold animate-pulse uppercase tracking-wider">¡Elige una talla!</p>}
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                {selectedProduct.sizes.map((size: string) => (
+                  <button
+                    key={size}
+                    onClick={() => { setSelectedSize(size); setError(false); }}
+                    className={`h-12 flex items-center justify-center font-bold font-mono transition-all border ${selectedSize === size ? 'bg-[#E60000] text-white border-[#E60000] scale-105' : 'bg-transparent text-gray-300 border-[#333] hover:border-gray-500 hover:bg-[#222]'}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={handleAddToCart} className="w-full py-5 bg-white text-black font-display text-xl uppercase font-bold tracking-wider hover:bg-[#E60000] hover:text-white transition-all flex items-center justify-center gap-3 btn-ripple glow-hover">
+              <ShoppingCart size={22} /> Agregar al Carrito
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
 function Hero() {
+  const { setSelectedProduct } = useContext(AppContext);
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-dark">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 z-0">
-        <img 
+    <section className="relative min-h-[90vh] pb-12 pt-32 flex flex-col justify-center overflow-hidden">
+      {/* Background Image with Parallax & Fade-in + Zoom */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <motion.img 
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.4 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
           src="https://images.unsplash.com/photo-1514989940723-e8e51635b782?auto=format&fit=crop&q=80&w=2000" 
-          alt="Streetwear background" 
-          className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
+          alt="Sneakers background" 
+          className="w-full h-full object-cover grayscale"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-dark/40 via-dark/80 to-light"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-transparent"></div>
       </div>
 
-      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto mt-20">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 flex flex-col justify-center h-full w-full">
+        {/* Animated Badge */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex items-center gap-2 bg-[#E60000]/10 backdrop-blur-md border border-[#E60000]/30 px-4 py-2 w-fit mb-8"
         >
-          <h1 className="text-[15vw] md:text-[10vw] leading-[0.85] tracking-tighter mb-6 text-white">
-            PISA FUERTE.<br/>
-            <span className="text-brand">ROMPE LA CALLE.</span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 font-medium">
-            El flow no se compra, pero los pares sí. Encuentra los drops más exclusivos y eleva tu outfit al siguiente nivel.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a href="#sneakers" className="w-full sm:w-auto px-8 py-4 bg-brand text-white font-display text-xl uppercase tracking-wider hover:bg-white hover:text-brand transition-colors">
-              Fuego en stock
-            </a>
-            <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="w-full sm:w-auto px-8 py-4 bg-[#25D366] text-white font-display text-xl uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#1da851] transition-colors">
-              <WhatsAppIcon size={20} />
-              Hablar con un asesor
-            </a>
-          </div>
+          <span className="text-[#E60000]"><Zap size={16} fill="currentColor" /></span>
+          <span className="text-sm font-bold tracking-wide uppercase text-[#E60000]">Entrega Rápida en Soacha</span>
+        </motion.div>
+
+        {/* Big Text */}
+        <motion.h1 
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3 }}
+          className="text-5xl sm:text-7xl md:text-[6rem] lg:text-[7rem] font-display font-bold leading-[1] mb-6 tracking-tighter uppercase max-w-4xl"
+        >
+          Los Sneakers Que <span className="text-white">No</span> Ves En <br/>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E60000] to-[#ff3333]">Todos Lados.</span>
+        </motion.h1>
+
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="text-lg md:text-2xl text-gray-400 max-w-2xl font-medium mb-10"
+        >
+          Modelos en tendencia listos para entrega en Soacha. Elige talla, agrega al carrito y recibe.
+        </motion.p>
+
+        {/* Buttons */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="flex flex-col sm:flex-row gap-4"
+        >
+          <button 
+            onClick={() => setSelectedProduct(FEATURED_SNEAKER)}
+            className="bg-[#E60000] text-white px-8 py-4 font-display font-bold text-lg uppercase tracking-wide flex items-center justify-center gap-3 skew-x-[-10deg] glow-hover btn-ripple w-full sm:w-auto"
+          >
+            <span className="skew-x-[10deg] flex items-center gap-2">Comprar Exclusivos <ArrowRight size={20}/></span>
+          </button>
+          <a href="#catalogo" className="bg-white/10 text-white backdrop-blur-md border border-white/20 px-8 py-4 font-display font-bold text-lg uppercase tracking-wide flex items-center justify-center gap-3 skew-x-[-10deg] hover:bg-white/20 transition-colors btn-ripple w-full sm:w-auto">
+            <span className="skew-x-[10deg]">Ver catálogo completo</span>
+          </a>
         </motion.div>
       </div>
     </section>
   );
 }
 
-function TrustBanner() {
+function FeaturedProduct() {
+  const { setSelectedProduct } = useContext(AppContext);
   return (
-    <div className="bg-brand text-white py-6 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="flex items-center gap-3 font-display text-xl uppercase tracking-wider">
-          <Truck size={24} /> Envíos a toda Colombia
-        </div>
-        <div className="flex items-center gap-3 font-display text-xl uppercase tracking-wider">
-          <Banknote size={24} /> Pago contra entrega
-        </div>
-        <div className="flex items-center gap-3 font-display text-xl uppercase tracking-wider">
-          <ShieldCheck size={24} /> Compra 100% segura
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProductCard({ product, isClothing = false }: { product: any, isClothing?: boolean }) {
-  const { addToCart, addToWishlist, wishlist } = useContext(AppContext);
-  const isWishlisted = wishlist.some((item: any) => item.id === product.id);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [showError, setShowError] = useState(false);
-
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      setShowError(true);
-      setTimeout(() => setShowError(false), 2000);
-      return;
-    }
-    addToCart({ ...product, selectedSize, cartId: `${product.id}-${selectedSize}-${Date.now()}` });
-    setSelectedSize(null);
-  };
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="group relative bg-white border border-gray-100 p-4 hover:shadow-xl transition-all duration-300 flex flex-col"
-    >
-      <div className={`relative overflow-hidden mb-4 bg-gray-100 ${isClothing ? 'aspect-[3/4]' : 'aspect-square'}`}>
-        <img 
-          src={product.image} 
-          alt={product.name} 
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          referrerPolicy="no-referrer"
-        />
+    <section className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+      <div className="flex flex-col lg:flex-row gap-12 items-center">
         
-        {/* Badges */}
-        {product.badge && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1 ${product.badge === 'HOT' ? 'bg-orange-500' : 'bg-dark'}`}>
-              {product.badge === 'HOT' && <Flame size={12} />}
-              {product.badge}
-            </span>
+        {/* Left Side: Product Info */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.6 }}
+          className="w-full lg:w-1/2 flex flex-col justify-center"
+        >
+          <div className="inline-flex items-center gap-2 bg-[#E60000]/10 text-[#E60000] border border-[#E60000]/30 px-3 py-1 mb-6 w-fit uppercase font-bold text-sm tracking-wider font-display">
+            <Flame size={16} /> El más pedido ahora
           </div>
-        )}
-
-        <div className="absolute top-3 right-3 z-10">
-          <button onClick={() => addToWishlist(product)} className={`p-2 rounded-full bg-white shadow-md hover:scale-110 transition-transform ${isWishlisted ? 'text-brand' : 'text-gray-400'}`}>
-            <Heart size={20} fill={isWishlisted ? 'currentColor' : 'none'} />
-          </button>
-        </div>
-        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-          <button onClick={handleAddToCart} className="px-6 py-3 bg-brand text-white font-display uppercase tracking-wider hover:bg-black transition-colors translate-y-4 group-hover:translate-y-0 duration-300">
-            Agregar al Carrito
-          </button>
-        </div>
-      </div>
-      <div className="flex-1 flex flex-col justify-between">
-        <div>
-          {product.brand && <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-1">{product.brand}</p>}
-          <h3 className="font-display text-xl tracking-wide mb-1 text-dark leading-tight">{product.name}</h3>
-          <p className="text-brand font-bold text-lg">{product.price}</p>
-        </div>
-        
-        {/* Size Selector */}
-        <div className="mt-4">
-          <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider font-semibold">Selecciona talla:</p>
-          <div className="flex flex-wrap gap-2">
-            {product.sizes?.map((size: string) => (
-              <button
-                key={size}
-                onClick={() => { setSelectedSize(size); setShowError(false); }}
-                className={`text-xs font-bold px-3 py-1.5 border transition-colors ${selectedSize === size ? 'bg-dark text-white border-dark' : 'border-gray-200 text-gray-600 hover:border-dark'}`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-          {showError && <p className="text-brand text-xs mt-2 font-semibold animate-pulse">¡Debes seleccionar una talla!</p>}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function SneakersSection() {
-  const [filter, setFilter] = useState('Todos');
-  const BRANDS = ['Todos', 'Nike', 'Jordan', 'Adidas', 'New Balance'];
-  
-  const filteredSneakers = filter === 'Todos' ? SNEAKERS : SNEAKERS.filter(s => s.brand === filter);
-
-  return (
-    <section id="sneakers" className="py-24 px-6 max-w-7xl mx-auto">
-      <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-5xl md:text-7xl font-display tracking-tighter mb-4 text-dark">HEAT EN TUS PIES</h2>
-          <p className="text-gray-500 uppercase tracking-widest text-sm font-semibold">Los drops que todos quieren</p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 mb-10">
-        {BRANDS.map(brand => (
-          <button
-            key={brand}
-            onClick={() => setFilter(brand)}
-            className={`px-6 py-2 font-display uppercase tracking-wider text-sm transition-colors ${filter === brand ? 'bg-brand text-white' : 'bg-gray-100 text-dark hover:bg-gray-200'}`}
+          <h2 className="text-5xl md:text-6xl font-display font-bold uppercase leading-[1.1] mb-6 tracking-tight">
+            {FEATURED_SNEAKER.name}
+          </h2>
+          <p className="text-xl text-gray-400 mb-6 font-medium">
+            {FEATURED_SNEAKER.description}
+          </p>
+          <p className="text-3xl font-bold font-display text-white mb-8 border-l-4 border-[#E60000] pl-4">
+            {FEATURED_SNEAKER.price}
+          </p>
+          <button 
+            onClick={() => setSelectedProduct(FEATURED_SNEAKER)} 
+            className="bg-white text-black px-8 py-5 font-display font-bold text-xl uppercase tracking-wider flex items-center justify-center gap-3 skew-x-[-10deg] hover:bg-[#E60000] hover:text-white transition-all glow-hover btn-ripple w-fit"
           >
-            {brand}
+            <span className="skew-x-[10deg] flex items-center gap-2"><ShoppingBag size={20}/> Lo quiero</span>
           </button>
-        ))}
-      </div>
+        </motion.div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredSneakers.map((item) => (
-          <ProductCard key={item.id} product={item} />
-        ))}
-      </div>
-    </section>
-  );
-}
+        {/* Right Side: Big Image with 3D hover */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="w-full lg:w-1/2 relative"
+        >
+          <div className="aspect-[4/3] sm:aspect-square bg-[#111] overflow-hidden border border-[#222]">
+            <motion.img 
+              whileHover={{ scale: 1.05, rotateZ: -2, rotateY: 5 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+              src={FEATURED_SNEAKER.image} 
+              alt={FEATURED_SNEAKER.name} 
+              className="w-full h-full object-cover transform origin-center shadow-2xl cursor-pointer"
+              onClick={() => setSelectedProduct(FEATURED_SNEAKER)}
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        </motion.div>
 
-function Section({ id, title, subtitle, items, isClothing = false }: { id: string, title: string, subtitle: string, items: any[], isClothing?: boolean }) {
-  return (
-    <section id={id} className="py-24 px-6 max-w-7xl mx-auto">
-      <div className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h2 className="text-5xl md:text-7xl font-display tracking-tighter mb-4 text-dark">{title}</h2>
-          <p className="text-gray-500 uppercase tracking-widest text-sm font-semibold">{subtitle}</p>
-        </div>
-        <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" className="text-sm uppercase tracking-widest font-bold border-b border-brand text-brand pb-1 hover:text-dark hover:border-dark transition-colors">
-          Ver catálogo completo
-        </a>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {items.map((item) => (
-          <ProductCard key={item.id} product={item} isClothing={isClothing} />
-        ))}
       </div>
     </section>
   );
 }
 
-function Newsletter() {
-  return (
-    <section className="bg-gray-100 py-24 px-6">
-      <div className="max-w-3xl mx-auto text-center">
-        <h2 className="font-display text-4xl md:text-5xl mb-4 text-dark">ÚNETE AL CLUB</h2>
-        <p className="text-gray-500 mb-8 text-lg">Recibe acceso anticipado a drops exclusivos, descuentos y noticias de la cultura sneaker antes que nadie.</p>
-        <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" onSubmit={(e) => e.preventDefault()}>
-          <input 
-            type="email" 
-            placeholder="Tu correo electrónico" 
-            className="flex-1 px-6 py-4 border border-gray-300 focus:outline-none focus:border-brand bg-white text-dark" 
-            required
-          />
-          <button type="submit" className="bg-brand text-white font-display uppercase tracking-wider px-8 py-4 hover:bg-dark transition-colors">
-            Suscribirme
-          </button>
-        </form>
-      </div>
-    </section>
-  );
-}
-
-function ChatBot() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{role: 'user' | 'assistant', text: string}[]>([
-    { role: 'assistant', text: '¡Qué más! 👋 ¿Buscando el heat de la temporada o armando el outfit?' }
-  ]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    
-    const userMsg = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setIsLoading(true);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      const systemInstruction = `
-        Eres un experto en streetwear y sneakers para "Dreams Sport", una tienda en Soacha, Colombia.
-        Tu objetivo es ayudar a los clientes a encontrar el "heat" (sneakers en tendencia como Nike, Jordan, Adidas, New Balance) y armar el mejor "drip" (ropa urbana).
-        Usa un tono muy urbano, juvenil, directo y con jerga de sneakers (drops, heat, drip, pares, outfit, cop).
-        Si el cliente quiere comprar, agregar al carrito o necesita info de tallas, invítalo a escribir al WhatsApp: ${WHATSAPP_NUMBER}.
-        Mantén tus respuestas cortas y con mucha energía.
-      `;
-
-      // Format history for Gemini
-      const contents = messages.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.text }]
-      }));
-      contents.push({ role: 'user', parts: [{ text: userMsg }] });
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: contents as any,
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        }
-      });
-
-      if (response.text) {
-        setMessages(prev => [...prev, { role: 'assistant', text: response.text! }]);
-      }
-    } catch (error) {
-      console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Ups, tuve un problema. Escríbenos mejor al WhatsApp para ayudarte rápido.' }]);
-    } finally {
-      setIsLoading(false);
+function ProductGrid() {
+  const { setSelectedProduct } = useContext(AppContext);
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
     }
   };
 
+  const item = {
+    hidden: { opacity: 0, y: 30 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
   return (
-    <>
-      {/* Floating Chat Button */}
-      <button 
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-24 right-6 z-40 bg-dark text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform ${isOpen ? 'hidden' : 'flex'}`}
+    <section id="catalogo" className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+      <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <div>
+          <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tight mb-2">🔥 Heat Disponible</h2>
+          <p className="text-gray-400 font-medium text-lg">Selecciona tu modelo y agrégalo al carrito.</p>
+        </div>
+      </div>
+
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-100px" }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
       >
-        <MessageCircle size={28} />
-        <span className="absolute -top-2 -right-2 bg-brand text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">1</span>
-      </button>
-
-      {/* Chat Window */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-24 right-6 z-50 w-[350px] max-w-[calc(100vw-48px)] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[500px] max-h-[calc(100vh-150px)]"
-          >
-            {/* Header */}
-            <div className="bg-dark p-4 flex justify-between items-center text-white">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white font-display text-xl">DS</div>
-                <div>
-                  <h4 className="font-bold text-sm">Dreams Sport</h4>
-                  <p className="text-xs text-brand">En línea</p>
+        {SNEAKERS.map((sneaker) => (
+          <motion.div key={sneaker.id} variants={item} className="group bg-[#111] border border-[#222] hover:border-[#E60000] transition-colors duration-300 glow-hover flex flex-col relative flex-1 cursor-pointer" onClick={() => setSelectedProduct(sneaker)}>
+            <div className="aspect-[4/3] overflow-hidden bg-[#0A0A0A] relative">
+              <img 
+                src={sneaker.image} 
+                alt={sneaker.name} 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
+                loading="lazy"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute bottom-4 right-4 flex gap-1 transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="bg-[#E60000] text-white p-3 shadow-lg">
+                  <ShoppingCart size={20} />
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">
-                <X size={20} />
-              </button>
             </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-gray-50">
-              {messages.map((msg, idx) => (
-                <div key={idx} className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user' ? 'bg-dark text-white self-end rounded-tr-sm' : 'bg-white border border-gray-200 text-dark self-start rounded-tl-sm'}`}>
-                  {msg.text}
+            
+            <div className="p-6 flex flex-col flex-grow justify-between bg-[#111]">
+              <div>
+                <h3 className="font-display text-xl sm:text-2xl font-bold uppercase leading-tight mb-2 group-hover:text-[#E60000] transition-colors">{sneaker.name}</h3>
+                <p className="text-xl font-medium text-gray-300 mb-6 font-display">{sneaker.price}</p>
+                <div className="flex flex-wrap gap-1 mt-auto">
+                    {sneaker.sizes.slice(0, 3).map(size => (
+                      <span key={size} className="text-xs bg-[#222] text-gray-400 px-2 py-1 font-mono">{size}</span>
+                    ))}
+                    <span className="text-xs text-gray-500 px-2 py-1 font-mono">+{sneaker.sizes.length - 3}</span>
                 </div>
-              ))}
-              {isLoading && (
-                <div className="bg-white border border-gray-200 text-dark self-start rounded-2xl rounded-tl-sm p-3 text-sm flex gap-1">
-                  <span className="animate-bounce">.</span><span className="animate-bounce delay-100">.</span><span className="animate-bounce delay-200">.</span>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input */}
-            <div className="p-4 bg-white border-t border-gray-200 flex gap-2">
-              <input 
-                type="text" 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Escribe un mensaje..."
-                className="flex-1 bg-gray-100 border border-transparent rounded-full px-4 py-2 text-sm focus:outline-none focus:border-brand focus:bg-white text-dark transition-colors"
-              />
-              <button 
-                onClick={handleSend}
-                disabled={isLoading || !input.trim()}
-                className="bg-brand text-white w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-50"
-              >
-                <Send size={18} className="ml-1" />
-              </button>
+              </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        ))}
+      </motion.div>
+    </section>
   );
 }
 
-function Footer() {
+function Features() {
+  const features = [
+    { icon: <Zap size={32} />, title: 'Entrega Rápida', desc: 'Recibes al instante en Soacha.' },
+    { icon: <Flame size={32} />, title: 'Pares en Tendencia', desc: 'Solo traemos el heat más buscado.' },
+    { icon: <MessageSquare size={32} />, title: 'Atención Directa', desc: 'Asesoría real por WhatsApp.' },
+    { icon: <ShoppingBag size={32} />, title: 'Compra Fácil', desc: 'Elige talla, agrega y paga al recibir.' },
+  ];
+
   return (
-    <footer id="ubicacion" className="bg-dark text-white pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 mb-16">
-        <div>
-          <Logo className="mb-8" />
-          <h2 className="font-display text-5xl mb-6">CAE A LA<br/><span className="text-brand">TIENDA</span></h2>
-          <p className="text-gray-400 mb-8 max-w-md text-lg">
-            Pruébate el heat en persona. Te armamos el outfit completo en Soacha.
-          </p>
-          <div className="flex items-start gap-4 mb-6">
-            <MapPin className="text-brand shrink-0 mt-1" size={28} />
+    <section className="py-24 bg-[#0A0A0A] border-y border-white/5">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          {features.map((feat, idx) => (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+              className="flex flex-col items-center text-center group"
+            >
+              <div className="w-20 h-20 mb-6 bg-[#111] border border-[#222] rounded-full flex items-center justify-center text-white group-hover:bg-[#E60000] group-hover:text-white group-hover:scale-110 group-hover:border-[#E60000] transition-all duration-300 shadow-[0_0_0_rgba(230,0,0,0)] group-hover:shadow-[0_0_20px_rgba(230,0,0,0.4)]">
+                {feat.icon}
+              </div>
+              <h3 className="font-display text-xl font-bold uppercase mb-2">{feat.title}</h3>
+              <p className="text-gray-400 font-medium">{feat.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StepsToBuy() {
+  const steps = [
+    { num: '01', title: 'ENCUENTRA EL HEAT', desc: 'Elige tu par favorito y selecciona tu talla (Desde la 32 hasta la 42).' },
+    { num: '02', title: 'AGREGA AL CARRITO', desc: 'Añádelo al carrito de compras, puedes elegir más de uno.' },
+    { num: '03', title: 'PIDE POR WHATSAPP', desc: 'Dale click a comprar y un asesor finaliza tu compra al instante.' },
+  ];
+
+  return (
+    <section className="py-24 px-6 max-w-7xl mx-auto border-t border-white/10">
+      <div className="text-center mb-16">
+        <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tight mb-4">📲 CÓMO COMPRAR</h2>
+        <p className="text-gray-400 font-medium text-lg max-w-2xl mx-auto">Selecciona tus tallas y cierra el pedido en segundos.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {steps.map((step, idx) => (
+          <motion.div 
+            key={idx}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: idx * 0.2 }}
+            className="bg-[#111] p-8 border border-[#222] relative overflow-hidden group hover:border-[#E60000] transition-colors"
+          >
+            <div className="text-[6rem] font-display font-black text-white/5 absolute -top-8 -right-4 group-hover:text-[#E60000]/10 transition-colors pointer-events-none">
+              {step.num}
+            </div>
+            <div className="relative z-10">
+              <span className="inline-block text-[#E60000] font-bold font-mono mb-4 border border-[#E60000]/30 px-2 py-1 text-sm bg-[#E60000]/10">PASO {step.num}</span>
+              <h3 className="font-display text-2xl font-bold uppercase mb-4">{step.title}</h3>
+              <p className="text-gray-400 text-lg leading-relaxed">{step.desc}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Testimonials() {
+  return (
+    <section className="py-24 bg-[#0A0A0A] overflow-hidden border-t border-white/5 relative">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(230,0,0,0.05)_0%,transparent_70%)] pointer-events-none"></div>
+      <div className="text-center mb-16 relative z-10">
+        <h2 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tight mb-4 text-white">⭐ Los Clientes Hablan</h2>
+        <p className="text-[#E60000] font-bold text-lg">Puro feedback real. Cero bots.</p>
+      </div>
+
+      <div className="relative flex overflow-hidden group">
+        <div className="slider-track gap-6 px-3">
+          {[...REVIEWS, ...REVIEWS, ...REVIEWS].map((review, idx) => (
+            <div key={idx} className="w-[300px] sm:w-[350px] bg-[#111] p-8 border border-[#222] flex-shrink-0">
+              <div className="flex text-[#E60000] mb-4">
+                {[...Array(review.rating)].map((_, i) => <Star key={i} size={18} fill="currentColor" />)}
+              </div>
+              <p className="text-gray-300 italic mb-6">"{review.text}"</p>
+              <h4 className="font-display font-bold uppercase tracking-wider">— {review.name}</h4>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FinalCTA() {
+  return (
+    <section className="py-32 px-6 max-w-4xl mx-auto text-center border-t border-white/10">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+      >
+        <h2 className="text-5xl md:text-6xl font-display font-bold uppercase leading-[1.1] mb-6">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">SI YA ELEGISTE,</span><br/>
+          PÍDELOS AHORA.
+        </h2>
+        <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
+          Sube, agrégalos al carrito con tu talla y nosotros nos encargamos del resto.
+        </p>
+
+        <a 
+          href="#catalogo"
+          className="inline-flex bg-[#E60000] text-white px-10 py-6 font-display font-black text-xl sm:text-2xl uppercase tracking-wide items-center justify-center gap-4 skew-x-[-10deg] animate-pulse-soft hover:bg-white hover:text-black transition-colors w-full sm:w-auto btn-ripple"
+        >
+          <span className="skew-x-[10deg] flex items-center gap-3">
+            <ShoppingBag size={28} /> Volver al Catálogo
+          </span>
+        </a>
+      </motion.div>
+    </section>
+  );
+}
+
+function Location() {
+  return (
+    <section className="bg-[#050505] border-t border-[#111]">
+      <div className="max-w-7xl mx-auto px-6 py-24 flex flex-col lg:flex-row gap-16 items-center">
+        <motion.div 
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="w-full lg:w-1/3"
+        >
+          <div className="mb-8">
+            <Logo />
+          </div>
+          <h2 className="text-3xl font-display font-bold uppercase mb-6">Visítanos y pruébate el estilo.</h2>
+          <div className="flex items-start gap-4 mb-8">
+            <div className="bg-[#111] p-3 text-[#E60000] rounded-full border border-[#222]">
+              <MapPin size={24} />
+            </div>
             <div>
-              <h4 className="font-bold text-xl mb-1">Soacha, Colombia</h4>
-              <p className="text-gray-400">Dreams Sport Tiendas de Ropa</p>
+              <h4 className="font-bold text-xl mb-1 text-white">Soacha, Colombia</h4>
+              <p className="text-gray-400">Dreams Sport Tiendas de Ropa.</p>
+              <p className="text-gray-500 text-sm mt-1">Entregas directas o envíos.</p>
             </div>
           </div>
-          <div className="flex gap-4 mt-8">
-            <a href="https://www.instagram.com/tiendasdreamssport_/" target="_blank" rel="noreferrer" className="w-14 h-14 border border-white/20 rounded-full flex items-center justify-center hover:bg-brand hover:border-brand transition-all">
+          
+          <div className="flex gap-4">
+            <a href="https://www.instagram.com/tiendasdreamssport_/" target="_blank" rel="noreferrer" className="bg-[#111] hover:bg-[#E60000] hover:text-white text-white p-4 transition-all hover:scale-110 border border-[#222] hover:border-[#E60000] glow-hover">
               <Instagram size={24} />
             </a>
-            <a href="https://www.facebook.com/Dreamstiendaderopa/" target="_blank" rel="noreferrer" className="w-14 h-14 border border-white/20 rounded-full flex items-center justify-center hover:bg-brand hover:border-brand transition-all">
+            <a href="https://www.facebook.com/Dreamstiendaderopa/" target="_blank" rel="noreferrer" className="bg-[#111] hover:bg-[#E60000] hover:text-white text-white p-4 transition-all hover:scale-110 border border-[#222] hover:border-[#E60000] glow-hover">
               <Facebook size={24} />
             </a>
           </div>
-        </div>
-        <div className="h-[400px] md:h-full min-h-[400px] bg-white/5 rounded-2xl overflow-hidden border border-white/10">
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="w-full lg:w-2/3 h-[450px] bg-[#111] border border-[#222] grayscale hover:grayscale-0 transition-all duration-700"
+        >
           <iframe 
             src="https://maps.google.com/maps?q=4.5701341,-74.2372575&hl=es&z=16&output=embed" 
             width="100%" 
@@ -604,76 +642,58 @@ function Footer() {
             referrerPolicy="no-referrer-when-downgrade"
             title="Mapa de ubicación Dreams Sport"
           ></iframe>
-        </div>
+        </motion.div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 uppercase tracking-widest">
-        <p>&copy; {new Date().getFullYear()} Dreams Sport. Todos los derechos reservados.</p>
-        <p>Diseñado para romperla.</p>
+      <div className="max-w-7xl mx-auto px-6 py-8 border-t border-[#111] text-center text-sm font-bold uppercase tracking-widest text-[#333]">
+        &copy; {new Date().getFullYear()} Dreams Sport. Diseñado para vender.
       </div>
-    </footer>
+    </section>
+  );
+}
+
+function FloatingWhatsApp() {
+  return (
+    <a 
+      href={generateWaLink('¡Hola! Necesito ayuda con unos tenis.')} 
+      target="_blank" 
+      rel="noreferrer"
+      className="fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] hover:scale-110 hover:shadow-[0_0_30px_rgba(37,211,102,0.6)] transition-all flex items-center justify-center animate-pulse-soft"
+    >
+      <WhatsAppIcon size={32} />
+    </a>
   );
 }
 
 export default function App() {
   const [cart, setCart] = useState<any[]>([]);
-  const [wishlist, setWishlist] = useState<any[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
-  const addToCart = (product: any) => {
-    setCart([...cart, product]);
+  const addToCart = (item: any) => {
+    setCart(prev => [...prev, item]);
     setIsCartOpen(true);
   };
 
   const removeFromCart = (cartId: string) => {
-    setCart(cart.filter(item => item.cartId !== cartId));
-  };
-
-  const addToWishlist = (product: any) => {
-    if (wishlist.some(item => item.id === product.id)) {
-      setWishlist(wishlist.filter(item => item.id !== product.id));
-    } else {
-      setWishlist([...wishlist, product]);
-    }
-  };
-
-  const removeFromWishlist = (id: string) => {
-    setWishlist(wishlist.filter(item => item.id !== id));
+    setCart(prev => prev.filter(item => item.cartId !== cartId));
   };
 
   return (
-    <AppContext.Provider value={{ cart, wishlist, isCartOpen, setIsCartOpen, isWishlistOpen, setIsWishlistOpen, addToCart, removeFromCart, addToWishlist, removeFromWishlist }}>
-      <div className="min-h-screen selection:bg-brand selection:text-white bg-light text-dark">
+    <AppContext.Provider value={{ cart, isCartOpen, setIsCartOpen, selectedProduct, setSelectedProduct, addToCart, removeFromCart }}>
+      <div className="min-h-screen selection:bg-[#E60000] selection:text-white pb-20 md:pb-0">
         <Navbar />
-        <Sidebars />
+        <CartSidebar />
+        <ProductModal />
+        
         <Hero />
-        <TrustBanner />
-        
-        <SneakersSection />
-        
-        <Section 
-          id="ropa" 
-          title="DRIP URBANO" 
-          subtitle="Viste caro, paga justo" 
-          items={CLOTHING} 
-          isClothing={true}
-        />
-        
-        <Newsletter />
-        
-        <Footer />
-        
-        {/* Fixed WhatsApp Button */}
-        <a 
-          href={WHATSAPP_URL} 
-          target="_blank" 
-          rel="noreferrer"
-          className="fixed bottom-6 right-6 z-40 bg-[#25D366] text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform flex items-center justify-center"
-        >
-          <WhatsAppIcon size={32} />
-        </a>
-
-        <ChatBot />
+        <FeaturedProduct />
+        <ProductGrid />
+        <Features />
+        <StepsToBuy />
+        <Testimonials />
+        <FinalCTA />
+        <Location />
+        <FloatingWhatsApp />
       </div>
     </AppContext.Provider>
   );
